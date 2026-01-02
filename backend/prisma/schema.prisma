@@ -1,14 +1,306 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// Reeder Fleet Management System - Prisma Schema
+// PostgreSQL Database
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
+
+// ==================== ENUMS ====================
+
+enum UserRole {
+  ADMIN           // Sistem Yöneticisi
+  FLEET_MANAGER   // Filo Yöneticisi (FY)
+  DRIVER          // Sürücü (kendi araç bilgilerini görür)
+  VIEWER          // Sadece Görüntüleyici
+}
+
+enum VehicleStatus {
+  ACTIVE          // Aktif - Kullanımda
+  MAINTENANCE     // Bakımda
+  PASSIVE         // Pasif - Kullanım dışı
+}
+
+enum FuelType {
+  DIESEL          // Dizel
+  GASOLINE        // Benzin
+  LPG             // LPG
+  HYBRID          // Hibrit
+  ELECTRIC        // Elektrik
+}
+
+enum MaintenanceType {
+  PERIODIC          // Periyodik Bakım (10-20bin km)
+  HEAVY_MAINTENANCE // Ağır Bakım (60-90bin km)
+  BRAKE_SYSTEM      // Fren Sistemi (Kritik)
+  INSPECTION_PREP   // Muayene Hazırlık
+  SEASONAL          // Mevsimsel Bakım
+}
+
+enum MaintenanceStatus {
+  PLANNED         // Planlandı
+  IN_PROGRESS     // Devam Ediyor
+  COMPLETED       // Tamamlandı
+  CANCELLED       // İptal Edildi
+}
+
+enum InsuranceType {
+  TRAFFIC         // Zorunlu Trafik Sigortası
+  KASKO           // Kasko
+}
+
+enum NotificationType {
+  INFO            // Bilgilendirme
+  WARNING         // Uyarı
+  DANGER          // Tehlike/Acil
+  SUCCESS         // Başarılı İşlem
+}
+
+enum DriverStatus {
+  ACTIVE          // Aktif
+  ON_LEAVE        // İzinli
+  INACTIVE        // Pasif
+}
+
+// ==================== MODELS ====================
+
+model User {
+  id            Int       @id @default(autoincrement())
+  email         String    @unique
+  password      String    // bcrypt hashed
+  fullName      String
+  role          UserRole  @default(FLEET_MANAGER)
+  avatar        String?
+  phone         String?
+  isActive      Boolean   @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // İlişkiler
+  driver        Driver?       // Eğer kullanıcı sürücüyse, driver bilgileri
+  notifications Notification[]
+  activityLogs  ActivityLog[]
+
+  @@map("users")
+}
+
+model Vehicle {
+  id              Int           @id @default(autoincrement())
+  plate           String        @unique // Plaka: 34 ABC 123
+  brand           String        // Marka: Ford, Mercedes
+  model           String        // Model: Transit, Sprinter
+  year            Int           // Yıl: 2022
+  fuelType        FuelType      @default(DIESEL)
+  km              Int           @default(0) // Kilometre
+  color           String?
+  chassisNo       String?       @unique // Şasi Numarası
+  engineNo        String?       // Motor Numarası
+  status          VehicleStatus @default(ACTIVE)
+  
+  // GPS Konum Bilgileri
+  lastLat         Float?        // Son Enlem
+  lastLng         Float?        // Son Boylam
+  lastSpeed       Float?        // Son Hız (km/s)
+  lastGpsUpdate   DateTime?     // Son GPS Güncellemesi
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // İlişkiler
+  driver          Driver?       // 1-to-1 (Nullable - araç boşta olabilir)
+  maintenances    Maintenance[]
+  insurances      Insurance[]
+  fines           Fine[]
+  locationHistory LocationHistory[]
+  assignmentHistory VehicleAssignmentHistory[]
+  activityLogs    ActivityLog[]
+
+  @@map("vehicles")
+}
+
+model Driver {
+  id              Int          @id @default(autoincrement())
+  fullName        String
+  phone           String
+  email           String       @unique
+  licenseNumber   String       @unique // Ehliyet Numarası
+  licenseExpiry   DateTime     // Ehliyet Bitiş Tarihi
+  birthDate       DateTime?    // Doğum Tarihi
+  address         String?
+  avatar          String?
+  status          DriverStatus @default(ACTIVE)
+  
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  // İlişkiler
+  userId          Int?         @unique // İleride sürücü kendi hesabıyla giriş yapabilsin (opsiyonel)
+  user            User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  vehicleId       Int?         @unique // 1-to-1 ilişki
+  vehicle         Vehicle?     @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  maintenances    Maintenance[] // Sürücünün yaptığı bakımlar
+  fines           Fine[]
+  assignmentHistory VehicleAssignmentHistory[]
+
+  @@map("drivers")
+}
+
+model Maintenance {
+  id          Int               @id @default(autoincrement())
+  type        MaintenanceType
+  description String?
+  date        DateTime          // Bakım Tarihi
+  cost        Float             @default(0) // Maliyet (TL)
+  service     String            // Servis Adı
+  notes       String?
+  status      MaintenanceStatus @default(PLANNED)
+  nextKm      Int?              // Sonraki Bakım KM
+  nextDate    DateTime?         // Sonraki Bakım Tarihi
+  
+  // Ödeme Bilgileri
+  isPaid      Boolean           @default(false) // Ödendi mi?
+  paidAt      DateTime?         // Ödeme Tarihi
+  paymentMethod String?         // Ödeme Yöntemi: Nakit, Kredi Kartı, Havale
+  invoiceNo   String?           // Fatura Numarası
+  
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  // İlişkiler
+  vehicleId   Int
+  vehicle     Vehicle           @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  
+  // O sırada aracı kullanan sürücü (snapshot)
+  driverId    Int?
+  driver      Driver?           @relation(fields: [driverId], references: [id], onDelete: SetNull)
+
+  @@map("maintenances")
+}
+
+model Insurance {
+  id          Int           @id @default(autoincrement())
+  type        InsuranceType
+  company     String        // Sigorta Şirketi: Allianz, Axa
+  policyNo    String        @unique // Poliçe Numarası
+  startDate   DateTime      // Başlangıç Tarihi
+  endDate     DateTime      // Bitiş Tarihi
+  premium     Float?        // Prim Tutarı (TL)
+  coverage    Float?        // Teminat Tutarı (TL)
+  notes       String?
+  
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // İlişkiler
+  vehicleId   Int
+  vehicle     Vehicle       @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@map("insurances")
+}
+
+// Araç-Sürücü Atama Geçmişi (Audit Trail)
+model VehicleAssignmentHistory {
+  id           Int       @id @default(autoincrement())
+  vehicleId    Int
+  vehicle      Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  
+  driverId     Int?
+  driver       Driver?   @relation(fields: [driverId], references: [id], onDelete: SetNull)
+  
+  assignedAt   DateTime  @default(now())
+  unassignedAt DateTime?
+  
+  reason       String?   // "Yeni Atama", "Bakım", "İzin", "Değişim", "Kaza" vs.
+  notes        String?
+  
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("vehicle_assignment_history")
+}
+
+model Fine {
+  id          Int       @id @default(autoincrement())
+  amount      Float     // Ceza Tutarı (TL)
+  date        DateTime  // Ceza Tarihi
+  type        String    // Ceza Türü: Hız, Park, Kırmızı Işık
+  location    String?   // Ceza Yeri
+  description String?
+  isPaid      Boolean   @default(false) // Ödendi mi?
+  paidAt      DateTime? // Ödeme Tarihi
+  paymentMethod String? // Ödeme Yöntemi
+  invoiceNo   String?   // Makbuz/Fatura No
+  dueDate     DateTime? // Son Ödeme Tarihi
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // İlişkiler
+  vehicleId   Int
+  vehicle     Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  driverId    Int?      // Ceza anındaki sürücü
+  driver      Driver?   @relation(fields: [driverId], references: [id], onDelete: SetNull)
+
+  @@map("fines")
+}
+
+model Notification {
+  id        Int              @id @default(autoincrement())
+  title     String
+  message   String
+  type      NotificationType @default(INFO)
+  isRead    Boolean          @default(false)
+  readAt    DateTime?
+  link      String?          // İlgili sayfaya yönlendirme linki
+  
+  createdAt DateTime         @default(now())
+
+  // İlişkiler
+  userId    Int
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model ActivityLog {
+  id          Int      @id @default(autoincrement())
+  action      String   // Örn: "Yeni Araç Eklendi", "Bakım Tamamlandı"
+  description String?
+  metadata    Json?    // Ek bilgiler (JSON formatında)
+  ipAddress   String?
+  
+  createdAt   DateTime @default(now())
+
+  // İlişkiler
+  userId      Int?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  vehicleId   Int?
+  vehicle     Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+
+  @@map("activity_logs")
+}
+
+// GPS Konum Geçmişi (Harita Modülü için)
+model LocationHistory {
+  id        Int      @id @default(autoincrement())
+  lat       Float    // Enlem
+  lng       Float    // Boylam
+  speed     Float?   // Hız (km/s)
+  heading   Float?   // Yön (derece)
+  
+  createdAt DateTime @default(now())
+
+  // İlişkiler
+  vehicleId Int
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleId, createdAt])
+  @@map("location_history")
+}
+
