@@ -4,12 +4,13 @@ import bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Seed işlemi başlıyor...\n');
+  console.log('Seed islemi basliyor...\n');
 
   // ==================== KULLANICILAR ====================
-  console.log('👤 Kullanıcılar oluşturuluyor...');
+  console.log('Kullanicilar olusturuluyor...');
   
-  const hashedPassword = await bcrypt.hash('123456', 12);
+  // Guclu sifre: En az 8 karakter, 1 buyuk harf, 1 kucuk harf, 1 rakam
+  const hashedPassword = await bcrypt.hash('Reeder2026!', 12);
 
   const admin = await prisma.user.upsert({
     where: { email: 'admin@reeder.com.tr' },
@@ -17,9 +18,9 @@ async function main() {
     create: {
       email: 'admin@reeder.com.tr',
       password: hashedPassword,
-      fullName: 'Sistem Yöneticisi',
+      fullName: 'Sistem Yoneticisi',
       role: UserRole.ADMIN,
-      phone: '0212 555 0001',
+      phone: '0212 555 00 01',
     },
   });
 
@@ -29,9 +30,9 @@ async function main() {
     create: {
       email: 'ahmet.yilmaz@reeder.com.tr',
       password: hashedPassword,
-      fullName: 'Ahmet Yılmaz',
+      fullName: 'Ahmet Yilmaz',
       role: UserRole.FLEET_MANAGER,
-      phone: '0532 555 0002',
+      phone: '0532 555 00 02',
     },
   });
 
@@ -41,18 +42,18 @@ async function main() {
     create: {
       email: 'viewer@reeder.com.tr',
       password: hashedPassword,
-      fullName: 'İzleyici Kullanıcı',
+      fullName: 'Izleyici Kullanici',
       role: UserRole.VIEWER,
-      phone: '0533 555 0003',
+      phone: '0533 555 00 03',
     },
   });
 
-  console.log(`   ✅ ${admin.fullName} (Admin)`);
-  console.log(`   ✅ ${filoYoneticisi.fullName} (Filo Yöneticisi)`);
-  console.log(`   ✅ ${viewer.fullName} (Görüntüleyici)`);
+  console.log(`   - ${admin.fullName} (Admin)`);
+  console.log(`   - ${filoYoneticisi.fullName} (Filo Yoneticisi)`);
+  console.log(`   - ${viewer.fullName} (Goruntuleyici)`);
 
-  // ==================== ARAÇLAR ====================
-  console.log('\n🚗 Araçlar oluşturuluyor...');
+  // ==================== ARACLAR ====================
+  console.log('\nAraclar olusturuluyor...');
 
   const vehicles = await Promise.all([
     prisma.vehicle.upsert({
@@ -68,8 +69,9 @@ async function main() {
         color: 'Beyaz',
         chassisNo: 'WF0XXXGCDX1234567',
         status: VehicleStatus.ACTIVE,
-        lastLat: 41.0082,
-        lastLng: 28.9784,
+        // Samsun - Atakum
+        lastLat: 41.3200,
+        lastLng: 36.2800,
         lastSpeed: 45,
         lastGpsUpdate: new Date(),
       },
@@ -87,8 +89,9 @@ async function main() {
         color: 'Gri',
         chassisNo: 'WDB9066331S123456',
         status: VehicleStatus.ACTIVE,
-        lastLat: 41.0422,
-        lastLng: 29.0083,
+        // Samsun - Ilkadim
+        lastLat: 41.2867,
+        lastLng: 36.3300,
         lastSpeed: 0,
         lastGpsUpdate: new Date(),
       },
@@ -109,7 +112,7 @@ async function main() {
         lastLat: 40.9923,
         lastLng: 29.0244,
         lastSpeed: 0,
-        lastGpsUpdate: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 saat önce
+        lastGpsUpdate: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 saat once
       },
     }),
     prisma.vehicle.upsert({
@@ -122,7 +125,7 @@ async function main() {
         year: 2020,
         fuelType: FuelType.DIESEL,
         km: 98700,
-        color: 'Kırmızı',
+        color: 'Kirmizi',
         chassisNo: 'ZFA25000001234567',
         status: VehicleStatus.ACTIVE,
         lastLat: 41.0553,
@@ -147,15 +150,15 @@ async function main() {
         lastLat: 41.0136,
         lastLng: 28.9550,
         lastSpeed: 0,
-        lastGpsUpdate: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 gün önce
+        lastGpsUpdate: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 gun once
       },
     }),
   ]);
 
-  vehicles.forEach(v => console.log(`   ✅ ${v.plate} - ${v.brand} ${v.model}`));
+  vehicles.forEach(v => console.log(`   - ${v.plate} - ${v.brand} ${v.model}`));
 
-  // ==================== SÜRÜCÜLER ====================
-  console.log('\n👨‍✈️ Sürücüler oluşturuluyor...');
+  // ==================== SURUCULER ====================
+  console.log('\nSuruculer olusturuluyor...');
 
   const drivers = await Promise.all([
     prisma.driver.upsert({
@@ -163,9 +166,11 @@ async function main() {
       update: {},
       create: {
         fullName: 'Mehmet Kaya',
-        phone: '0532 111 2233',
+        phone: '0532 111 22 33',
         email: 'mehmet.kaya@reeder.com.tr',
-        licenseNumber: '34DRV001234',
+        identityNumber: '12345678901',
+        licenseNumber: '123456',
+        licenseClass: 'B',
         licenseExpiry: new Date('2027-05-15'),
         birthDate: new Date('1985-03-20'),
         status: DriverStatus.ACTIVE,
@@ -177,9 +182,11 @@ async function main() {
       update: {},
       create: {
         fullName: 'Ali Demir',
-        phone: '0533 222 3344',
+        phone: '0533 222 33 44',
         email: 'ali.demir@reeder.com.tr',
-        licenseNumber: '34DRV002345',
+        identityNumber: '23456789012',
+        licenseNumber: '234567',
+        licenseClass: 'C',
         licenseExpiry: new Date('2026-08-20'),
         birthDate: new Date('1990-07-10'),
         status: DriverStatus.ACTIVE,
@@ -190,24 +197,28 @@ async function main() {
       where: { email: 'huseyin.yildiz@reeder.com.tr' },
       update: {},
       create: {
-        fullName: 'Hüseyin Yıldız',
-        phone: '0534 333 4455',
+        fullName: 'Huseyin Yildiz',
+        phone: '0534 333 44 55',
         email: 'huseyin.yildiz@reeder.com.tr',
-        licenseNumber: '34DRV003456',
+        identityNumber: '34567890123',
+        licenseNumber: '345678',
+        licenseClass: 'B',
         licenseExpiry: new Date('2025-12-01'),
         birthDate: new Date('1988-11-25'),
         status: DriverStatus.ON_LEAVE,
-        vehicleId: null, // Araç atanmamış
+        vehicleId: null, // Arac atanmamis
       },
     }),
     prisma.driver.upsert({
       where: { email: 'mustafa.celik@reeder.com.tr' },
       update: {},
       create: {
-        fullName: 'Mustafa Çelik',
-        phone: '0535 444 5566',
+        fullName: 'Mustafa Celik',
+        phone: '0535 444 55 66',
         email: 'mustafa.celik@reeder.com.tr',
-        licenseNumber: '34DRV004567',
+        identityNumber: '45678901234',
+        licenseNumber: '456789',
+        licenseClass: 'D',
         licenseExpiry: new Date('2028-02-28'),
         birthDate: new Date('1992-04-15'),
         status: DriverStatus.ACTIVE,
@@ -216,17 +227,17 @@ async function main() {
     }),
   ]);
 
-  drivers.forEach(d => console.log(`   ✅ ${d.fullName} - ${d.phone}`));
+  drivers.forEach(d => console.log(`   - ${d.fullName} - ${d.phone}`));
 
   // ==================== BAKIMLAR ====================
-  console.log('\n🔧 Bakım kayıtları oluşturuluyor...');
+  console.log('\nBakim kayitlari olusturuluyor...');
 
   const maintenances = await Promise.all([
     prisma.maintenance.create({
       data: {
         vehicleId: vehicles[0].id,
         type: MaintenanceType.PERIODIC,
-        description: 'Periyodik Bakım (15.000 km) - Yağ ve filtre değişimi',
+        description: 'Periyodik Bakim (15.000 km) - Yag ve filtre degisimi',
         date: new Date('2024-12-15'),
         cost: 4000,
         service: 'Ford Yetkili Servis',
@@ -239,7 +250,7 @@ async function main() {
       data: {
         vehicleId: vehicles[2].id,
         type: MaintenanceType.BRAKE_SYSTEM,
-        description: 'Fren Balatası ve Disk Değişimi (Ön)',
+        description: 'Fren Balatasi ve Disk Degisimi (On)',
         date: new Date(),
         cost: 7000,
         service: 'Bosch Car Service',
@@ -250,10 +261,10 @@ async function main() {
       data: {
         vehicleId: vehicles[1].id,
         type: MaintenanceType.INSPECTION_PREP,
-        description: 'TÜVTÜRK Muayene Ücreti',
+        description: 'TUVTURK Muayene Ucreti',
         date: new Date('2025-01-15'),
         cost: 850,
-        service: 'TÜVTÜRK',
+        service: 'TUVTURK',
         status: MaintenanceStatus.PLANNED,
       },
     }),
@@ -261,7 +272,7 @@ async function main() {
       data: {
         vehicleId: vehicles[3].id,
         type: MaintenanceType.HEAVY_MAINTENANCE,
-        description: 'Triger Seti Değişimi (Kayış)',
+        description: 'Triger Seti Degisimi (Kayis)',
         date: new Date('2024-11-20'),
         cost: 5500,
         service: 'Fiat Yetkili Servis',
@@ -273,19 +284,19 @@ async function main() {
       data: {
         vehicleId: vehicles[0].id,
         type: MaintenanceType.SEASONAL,
-        description: 'Kışlık Lastik Değişimi (Takım)',
+        description: 'Kislik Lastik Degisimi (Takim)',
         date: new Date('2024-11-01'),
         cost: 8500,
-        service: 'Lastik Dünyası',
+        service: 'Lastik Dunyasi',
         status: MaintenanceStatus.COMPLETED,
       },
     }),
   ]);
 
-  console.log(`   ✅ ${maintenances.length} bakım kaydı oluşturuldu`);
+  console.log(`   - ${maintenances.length} bakim kaydi olusturuldu`);
 
-  // ==================== SİGORTALAR ====================
-  console.log('\n📋 Sigorta poliçeleri oluşturuluyor...');
+  // ==================== SIGORTALAR ====================
+  console.log('\nSigorta policeleri olusturuluyor...');
 
   const insurances = await Promise.all([
     prisma.insurance.create({
@@ -338,10 +349,10 @@ async function main() {
     }),
   ]);
 
-  console.log(`   ✅ ${insurances.length} sigorta poliçesi oluşturuldu`);
+  console.log(`   - ${insurances.length} sigorta policesi olusturuldu`);
 
   // ==================== CEZALAR ====================
-  console.log('\n⚠️ Trafik cezaları oluşturuluyor...');
+  console.log('\nTrafik cezalari olusturuluyor...');
 
   const fines = await Promise.all([
     prisma.fine.create({
@@ -350,9 +361,9 @@ async function main() {
         driverId: drivers[0].id,
         amount: 1506,
         date: new Date('2024-11-20'),
-        type: 'Hız İhlali',
-        location: 'E-5 Karayolu, Bakırköy',
-        description: '82 km/s hız sınırı aşımı (%30)',
+        type: 'Hiz Ihlali',
+        location: 'E-5 Karayolu, Bakirkoy',
+        description: '82 km/s hiz siniri asimi (%30)',
         isPaid: false,
         dueDate: new Date('2025-01-20'),
       },
@@ -363,9 +374,9 @@ async function main() {
         driverId: drivers[1].id,
         amount: 690,
         date: new Date('2024-10-05'),
-        type: 'Park Yasağı',
-        location: 'Kadıköy, Bağdat Caddesi',
-        description: 'Duraklama ve Park Etme Yasaklarına Uymamak',
+        type: 'Park Yasagi',
+        location: 'Kadikoy, Bagdat Caddesi',
+        description: 'Duraklama ve Park Etme Yasaklarina Uymamak',
         isPaid: true,
         paidAt: new Date('2024-10-15'),
         paymentMethod: 'CREDIT_CARD',
@@ -378,9 +389,9 @@ async function main() {
         driverId: drivers[3].id,
         amount: 3135,
         date: new Date('2024-12-10'),
-        type: 'Kırmızı Işık',
-        location: 'Mecidiyeköy Kavşağı',
-        description: 'Kırmızı Işık Kuralına Uymamak',
+        type: 'Kirmizi Isik',
+        location: 'Mecidiyekoy Kavsagi',
+        description: 'Kirmizi Isik Kuralina Uymamak',
         isPaid: false,
         dueDate: new Date('2025-02-10'),
       },
@@ -393,7 +404,7 @@ async function main() {
         date: new Date('2025-01-02'),
         type: 'Emniyet Kemeri',
         location: 'TEM Otoyolu, Maslak',
-        description: 'Seyir halinde cep telefonu kullanımı',
+        description: 'Seyir halinde cep telefonu kullanimi',
         isPaid: false,
         dueDate: new Date('2025-02-02'),
       },
@@ -405,8 +416,8 @@ async function main() {
         amount: 690,
         date: new Date('2024-09-15'),
         type: 'Muayene',
-        location: 'Sarıyer',
-        description: 'Muayene süresi geçmiş araçla trafiğe çıkmak',
+        location: 'Sariyer',
+        description: 'Muayene suresi gecmis aracla trafige cikmak',
         isPaid: true,
         paidAt: new Date('2024-09-20'),
         paymentMethod: 'CASH',
@@ -419,9 +430,9 @@ async function main() {
         driverId: drivers[1].id,
         amount: 1506,
         date: new Date('2024-11-25'),
-        type: 'Hız İhlali',
+        type: 'Hiz Ihlali',
         location: 'Kuzey Marmara Otoyolu',
-        description: 'Hız Sınırını %10-30 Aşmak',
+        description: 'Hiz Sinirini %10-30 Asmak',
         isPaid: true,
         paidAt: new Date('2024-12-05'),
         paymentMethod: 'CORPORATE_CARD',
@@ -430,17 +441,17 @@ async function main() {
     }),
   ]);
 
-  console.log(`   ✅ ${fines.length} ceza kaydı oluşturuldu`);
+  console.log(`   - ${fines.length} ceza kaydi olusturuldu`);
 
-  // ==================== BİLDİRİMLER ====================
-  console.log('\n🔔 Bildirimler oluşturuluyor...');
+  // ==================== BILDIRIMLER ====================
+  console.log('\nBildirimler olusturuluyor...');
 
   const notifications = await Promise.all([
     prisma.notification.create({
       data: {
         userId: filoYoneticisi.id,
-        title: 'Sigorta Süresi Doluyor',
-        message: '34 ABC 123 plakalı aracın trafik sigortası 30 gün içinde sona erecek.',
+        title: 'Sigorta Suresi Doluyor',
+        message: '34 ABC 123 plakali aracin trafik sigortasi 30 gun icinde sona erecek.',
         type: NotificationType.WARNING,
         isRead: false,
         link: '/insurance',
@@ -449,8 +460,8 @@ async function main() {
     prisma.notification.create({
       data: {
         userId: filoYoneticisi.id,
-        title: 'Bakım Hatırlatması',
-        message: '34 DEF 456 plakalı aracın muayene tarihi yaklaşıyor.',
+        title: 'Bakim Hatirlatmasi',
+        message: '34 DEF 456 plakali aracin muayene tarihi yaklasiyor.',
         type: NotificationType.INFO,
         isRead: false,
         link: '/maintenance',
@@ -459,8 +470,8 @@ async function main() {
     prisma.notification.create({
       data: {
         userId: filoYoneticisi.id,
-        title: 'Yeni Trafik Cezası',
-        message: '34 JKL 012 plakalı araca kırmızı ışık ihlali cezası kesildi.',
+        title: 'Yeni Trafik Cezasi',
+        message: '34 JKL 012 plakali araca kirmizi isik ihlali cezasi kesildi.',
         type: NotificationType.DANGER,
         isRead: true,
         readAt: new Date(),
@@ -469,43 +480,43 @@ async function main() {
     }),
   ]);
 
-  console.log(`   ✅ ${notifications.length} bildirim oluşturuldu`);
+  console.log(`   - ${notifications.length} bildirim olusturuldu`);
 
-  // ==================== AKTİVİTE LOGLARI ====================
-  console.log('\n📝 Aktivite logları oluşturuluyor...');
+  // ==================== AKTIVITE LOGLARI ====================
+  console.log('\nAktivite loglari olusturuluyor...');
 
   const activityLogs = await Promise.all([
     prisma.activityLog.create({
       data: {
         userId: filoYoneticisi.id,
         vehicleId: vehicles[0].id,
-        action: 'Araç Eklendi',
-        description: '34 ABC 123 plakalı Ford Transit sisteme eklendi.',
+        action: 'Arac Eklendi',
+        description: '34 ABC 123 plakali Ford Transit sisteme eklendi.',
       },
     }),
     prisma.activityLog.create({
       data: {
         userId: filoYoneticisi.id,
         vehicleId: vehicles[2].id,
-        action: 'Bakım Başladı',
-        description: '34 GHI 789 plakalı araç bakıma alındı.',
+        action: 'Bakim Basladi',
+        description: '34 GHI 789 plakali arac bakima alindi.',
       },
     }),
     prisma.activityLog.create({
       data: {
         userId: filoYoneticisi.id,
-        action: 'Sürücü Eklendi',
-        description: 'Mehmet Kaya sürücü olarak sisteme eklendi.',
+        action: 'Surucu Eklendi',
+        description: 'Mehmet Kaya surucu olarak sisteme eklendi.',
       },
     }),
   ]);
 
-  console.log(`   ✅ ${activityLogs.length} aktivite logu oluşturuldu`);
+  console.log(`   - ${activityLogs.length} aktivite logu olusturuldu`);
 
-  // ==================== KONUM GEÇMİŞİ ====================
-  console.log('\n📍 Konum geçmişi oluşturuluyor...');
+  // ==================== KONUM GECMISI ====================
+  console.log('\nKonum gecmisi olusturuluyor...');
 
-  // Son 1 saat için sahte GPS verileri
+  // Son 1 saat icin sahte GPS verileri
   const locationHistoryData = [];
   const now = Date.now();
   
@@ -516,7 +527,7 @@ async function main() {
       lng: 28.9784 + (Math.random() - 0.5) * 0.02,
       speed: 30 + Math.random() * 40,
       heading: Math.random() * 360,
-      createdAt: new Date(now - (12 - i) * 5 * 60 * 1000), // 5 dakika aralıklarla
+      createdAt: new Date(now - (12 - i) * 5 * 60 * 1000), // 5 dakika araliklarla
     });
   }
 
@@ -524,18 +535,18 @@ async function main() {
     data: locationHistoryData,
   });
 
-  console.log(`   ✅ ${locationHistoryData.length} konum kaydı oluşturuldu`);
+  console.log(`   - ${locationHistoryData.length} konum kaydi olusturuldu`);
 
-  console.log('\n✨ Seed işlemi tamamlandı!\n');
-  console.log('📧 Giriş bilgileri:');
+  console.log('\nSeed islemi tamamlandi!\n');
+  console.log('Giris bilgileri:');
   console.log('   Admin: admin@reeder.com.tr / 123456');
-  console.log('   Filo Yöneticisi: ahmet.yilmaz@reeder.com.tr / 123456');
-  console.log('   Görüntüleyici: viewer@reeder.com.tr / 123456\n');
+  console.log('   Filo Yoneticisi: ahmet.yilmaz@reeder.com.tr / 123456');
+  console.log('   Goruntuleyici: viewer@reeder.com.tr / 123456\n');
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Seed hatası:', e);
+    console.error('Seed hatasi:', e);
     process.exit(1);
   })
   .finally(async () => {

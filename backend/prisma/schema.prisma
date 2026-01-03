@@ -79,6 +79,11 @@ model User {
   phone         String?
   isActive      Boolean   @default(true)
   lastLoginAt   DateTime?
+  
+  // Brute Force Koruması
+  loginAttempts Int       @default(0)  // Hatalı giriş denemesi sayısı
+  lockedUntil   DateTime? // Hesap kilitleme süresi (null = kilitli değil)
+  
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -86,6 +91,7 @@ model User {
   driver        Driver?       // Eğer kullanıcı sürücüyse, driver bilgileri
   notifications Notification[]
   activityLogs  ActivityLog[]
+  passwordResetTokens PasswordResetToken[]
 
   @@map("users")
 }
@@ -129,7 +135,9 @@ model Driver {
   fullName        String
   phone           String
   email           String       @unique
+  identityNumber  String?      @unique // TC Kimlik Numarası (11 hane)
   licenseNumber   String       @unique // Ehliyet Numarası
+  licenseClass    String?      // Ehliyet Sınıfı (B, C, D, E, vb.)
   licenseExpiry   DateTime     // Ehliyet Bitiş Tarihi
   birthDate       DateTime?    // Doğum Tarihi
   address         String?
@@ -302,5 +310,18 @@ model LocationHistory {
 
   @@index([vehicleId, createdAt])
   @@map("location_history")
+}
+
+// Şifre Sıfırlama Token'ları
+model PasswordResetToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique // Benzersiz token (UUID)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime // Token geçerlilik süresi (örn: 1 saat)
+  used      Boolean  @default(false) // Token kullanıldı mı?
+  createdAt DateTime @default(now())
+
+  @@map("password_reset_tokens")
 }
 
