@@ -170,7 +170,7 @@ function Dashboard() {
           border: '1px solid #f3f4f6'
         }}>
           <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937', marginBottom: '20px' }}>
-            📋 Son Aktiviteler
+            Son Aktiviteler
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {recentActivities.map((activity) => (
@@ -223,7 +223,7 @@ function Dashboard() {
           border: '1px solid #f3f4f6'
         }}>
           <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937', marginBottom: '20px' }}>
-            ⚡ Hızlı İşlemler
+             Hızlı İşlemler
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {[
